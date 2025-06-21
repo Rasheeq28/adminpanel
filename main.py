@@ -841,6 +841,7 @@
 import streamlit as st
 import pandas as pd
 from supabase import create_client, Client
+from datetime import datetime
 
 # Initialize Supabase client
 SUPABASE_URL = st.secrets["supabase"]["url"]
@@ -1087,6 +1088,9 @@ elif main_section == "Manage Job":
 
                 submitted = st.form_submit_button("Add Job")
 
+
+
+            # Inside the submitted block
             if submitted:
                 job_data = {
                     "company": company,
@@ -1094,7 +1098,7 @@ elif main_section == "Manage Job":
                     "location": location,
                     "type": type_,
                     "salary": salary,
-                    "workMode": workMode,  # ensure enum value matches Supabase enum exactly
+                    "workMode": workMode,
                     "vacancy": vacancy,
                     "recruiterMail": recruiterMail,
                     "recruitingUrl": recruitingUrl,
@@ -1102,7 +1106,8 @@ elif main_section == "Manage Job":
                     "description": description,
                     "responsibilities": responsibilities,
                     "requirements": requirements,
-                    "skills": skills
+                    "skills": skills,
+                    "Timestamp": datetime.utcnow().isoformat()  # ✅ add timestamp here
                 }
 
                 try:
