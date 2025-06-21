@@ -1260,7 +1260,16 @@ elif main_section == "Manage Job":
                 type_ = st.selectbox("Type", JOB_TYPES, index=JOB_TYPES.index(selected_job["type"]))
                 salary = st.text_input("Salary", selected_job.get("salary", ""))
                 workMode = st.selectbox("Work Mode", WORK_MODES, index=WORK_MODES.index(selected_job["workMode"]))
-                vacancy = st.number_input("Vacancy", value=selected_job.get("vacancy", 1), step=1, min_value=1)
+
+                # ✅ Safe handling for vacancy value
+                vacancy_raw = selected_job.get("vacancy", 1)
+                try:
+                    vacancy_value = int(vacancy_raw)
+                    if vacancy_value < 1:
+                        vacancy_value = 1
+                except (TypeError, ValueError):
+                    vacancy_value = 1
+                vacancy = st.number_input("Vacancy", value=vacancy_value, step=1, min_value=1)
 
                 recruiterMail = st.text_input("Recruiter Email", selected_job.get("recruiterMail", ""))
                 recruitingUrl = st.text_input("Recruiting URL", selected_job.get("recruitingUrl", ""))
@@ -1300,6 +1309,7 @@ elif main_section == "Manage Job":
                     st.error(f"❌ Failed to update job: {e}")
         else:
             st.info("ℹ️ No jobs found to update.")
+
 
     # --- DELETE JOB ---
     elif job_action == "Delete Job":
