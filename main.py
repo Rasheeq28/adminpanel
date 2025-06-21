@@ -1053,7 +1053,6 @@ if main_section == "Manage Member":
             st.info("No members found.")
 
 # === Manage Job Section ===
-# === Manage Job Section ===
 elif main_section == "Manage Job":
     st.sidebar.subheader("Job Options")
     job_action = st.sidebar.radio("Select Action", ["Add Job", "Update Job", "Delete Job"])
@@ -1068,7 +1067,7 @@ elif main_section == "Manage Job":
                 company = st.text_input("Company")
                 position = st.text_input("Position")
                 location = st.text_input("Location")
-                type_ = st.text_input("Type")
+                type_ = st.selectbox("Type", ["contract", "full_time", "internship", "part_time"])
                 salary = st.text_input("Salary")
                 workMode = st.selectbox("Work Mode", ["Remote", "Onsite", "Hybrid"])
                 vacancy = st.number_input("Vacancy", step=1, min_value=1)
@@ -1112,7 +1111,11 @@ elif main_section == "Manage Job":
             if uploaded_file:
                 try:
                     df = pd.read_csv(uploaded_file)
-                    required_cols = ["company", "position", "location", "type", "salary", "workMode", "description", "responsibilities", "requirements", "skills", "recruitingUrl", "recruiterMail", "companyImage", "vacancy"]
+                    required_cols = [
+                        "company", "position", "location", "type", "salary", "workMode",
+                        "description", "responsibilities", "requirements", "skills",
+                        "recruitingUrl", "recruiterMail", "companyImage", "vacancy"
+                    ]
                     if not all(col in df.columns for col in required_cols):
                         st.error("Missing required columns in CSV.")
                     elif st.button("Insert all jobs from CSV"):
@@ -1140,7 +1143,11 @@ elif main_section == "Manage Job":
                 company = st.text_input("Company", value=job["company"])
                 position = st.text_input("Position", value=job["position"])
                 location = st.text_input("Location", value=job["location"])
-                type_ = st.text_input("Type", value=job["type"])
+                type_ = st.selectbox(
+                    "Type",
+                    ["contract", "full_time", "internship", "part_time"],
+                    index=["contract", "full_time", "internship", "part_time"].index(job["type"])
+                )
                 salary = st.text_input("Salary", value=job["salary"])
                 workMode = st.selectbox("Work Mode", ["Remote", "Onsite", "Hybrid"], index=["Remote", "Onsite", "Hybrid"].index(job["workMode"]))
                 vacancy = st.number_input("Vacancy", value=job["vacancy"], step=1)
@@ -1205,7 +1212,7 @@ elif main_section == "Manage Job":
                         for j in preview_jobs:
                             supabase.table("Job").delete().eq("id", j["id"]).execute()
                         st.success(f"Deleted {len(preview_jobs)} job(s).")
-                        st.experimental_rerun()
+                        st.rerun()
                     except Exception as e:
                         st.error(f"Failed to delete: {e}")
         else:
