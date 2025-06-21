@@ -3,8 +3,9 @@ import pandas as pd
 from supabase import create_client, Client
 
 # Supabase config
-SUPABASE_URL = "https://bddsrsaatvtjnccbwxim.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkZHNyc2FhdHZ0am5jY2J3eGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkxMDM0MjQsImV4cCI6MjA2NDY3OTQyNH0.lkToaG8DZvezYlSp6fLuLbix8nnhSIGaALcOs0XWpNk"
+SUPABASE_URL = st.secrets["supabase"]["url"]
+SUPABASE_KEY = st.secrets["supabase"]["key"]
+
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Table names
