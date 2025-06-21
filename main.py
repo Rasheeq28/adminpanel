@@ -80,7 +80,7 @@ with st.form("member_form"):
     facebookUrl = st.text_input("Facebook URL")
     linkedinUrl = st.text_input("LinkedIn URL")
     imageUrl = st.text_input("Image URL")
-    status = st.selectbox("Status", options=["Active", "Inactive"])
+    status = st.selectbox("Status", options=["current", "Inactive"])
     panel = st.text_input("Panel")
 
     submitted = st.form_submit_button("Add Member")
