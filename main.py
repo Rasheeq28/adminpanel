@@ -426,9 +426,110 @@ if main_section == "Manage Member":
                 except Exception as e:
                     st.error(f"Error reading CSV file: {e}")
 
+
     elif sub_section == "Update Member":
+
         st.title("Update Member")
-        st.info("Update functionality coming soon...")
+
+        # Fetch all members
+
+        try:
+
+            response = supabase.table("Member").select("*").execute()
+
+            members = response.data
+
+        except Exception as e:
+
+            st.error(f"Error fetching members: {e}")
+
+            members = []
+
+        if members:
+
+            member_dict = {f"{m['name']} ({m['id']})": m for m in members}
+
+            selected_label = st.selectbox("Select a member to update", list(member_dict.keys()))
+
+            selected_member = member_dict[selected_label]
+
+            with st.form("update_member_form"):
+
+                name = st.text_input("Name", value=selected_member["name"])
+
+                designation = st.text_input("Designation", value=selected_member.get("designation", ""))
+
+                facebookUrl = st.text_input("Facebook URL", value=selected_member.get("facebookUrl", ""))
+
+                linkedinUrl = st.text_input("LinkedIn URL", value=selected_member.get("linkedinUrl", ""))
+
+                imageUrl = st.text_input("Image URL", value=selected_member.get("imageUrl", ""))
+
+                status = st.selectbox("Status", options=["current", "alumni"],
+                                      index=["current", "alumni"].index(selected_member["status"]))
+
+                panel = st.selectbox("Panel", options=[
+
+                    "executive_member",
+
+                    "sub_executive",
+
+                    "executive",
+
+                    "general_member",
+
+                    "advisory"
+
+                ], index=[
+
+                    "executive_member",
+
+                    "sub_executive",
+
+                    "executive",
+
+                    "general_member",
+
+                    "advisory"
+
+                ].index(selected_member["panel"]))
+
+                submitted = st.form_submit_button("Update Member")
+
+            if submitted:
+
+                updated_data = {
+
+                    "name": name,
+
+                    "designation": designation,
+
+                    "facebookUrl": facebookUrl,
+
+                    "linkedinUrl": linkedinUrl,
+
+                    "imageUrl": imageUrl,
+
+                    "status": status,
+
+                    "panel": panel,
+
+                }
+
+                try:
+
+                    supabase.table("Member").update(updated_data).eq("id", selected_member["id"]).execute()
+
+                    st.success("Member updated successfully!")
+
+                except Exception as e:
+
+                    st.error(f"Failed to update member: {e}")
+
+        else:
+
+            st.info("No members found in the database.")
+
 
     elif sub_section == "Delete Member":
         st.title("Delete Member")
