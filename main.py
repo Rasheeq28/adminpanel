@@ -533,6 +533,7 @@ if main_section == "Manage Member":
 
 
 
+
     elif sub_section == "Delete Member":
 
         st.title("Delete Member")
@@ -553,54 +554,54 @@ if main_section == "Manage Member":
 
         if members:
 
-            search_term = st.text_input("Search by name")
+            # Build label -> ID mapping
 
-            filtered_members = [m for m in members if
-                                search_term.lower() in m["name"].lower()] if search_term else members
+            member_options = {
 
-            if filtered_members:
+                f"{m['name']} - {m.get('designation', '')} ({m['id']})": m["id"]
 
-                st.write("Select members to delete:")
+                for m in members
 
-                selected_ids = []
+            }
 
-                for member in filtered_members:
+            # Multiselect search by name
 
-                    label = f"{member['name']} - {member.get('designation', '')} ({member['id']})"
+            selected_labels = st.multiselect(
 
-                    if st.checkbox(label, key=f"delete_{member['id']}"):
-                        selected_ids.append(member["id"])
+                "Search and select members to delete:",
 
-                if selected_ids:
+                options=list(member_options.keys()),
 
-                    if st.button("Delete Selected"):
+                help="Type a name to filter and select one or more members"
 
-                        try:
+            )
 
-                            for mid in selected_ids:
-                                supabase.table("Member").delete().eq("id", mid).execute()
+            selected_ids = [member_options[label] for label in selected_labels]
 
-                            st.success(f"Deleted {len(selected_ids)} member(s) successfully!")
+            if selected_ids:
 
-                            st.rerun()
+                if st.button("Delete Selected Members"):
 
+                    try:
 
-                        except Exception as e:
+                        for mid in selected_ids:
+                            supabase.table("Member").delete().eq("id", mid).execute()
 
-                            st.error(f"Failed to delete members: {e}")
+                        st.success(f"Deleted {len(selected_ids)} member(s) successfully!")
 
-                else:
+                        st.rerun()
 
-                    st.warning("Select at least one member to delete.")
+                    except Exception as e:
+
+                        st.error(f"Failed to delete members: {e}")
 
             else:
 
-                st.info("No members matched your search.")
+                st.warning("Select at least one member to delete.")
 
         else:
 
             st.info("No members found in the database.")
-
 
 # === Manage Job Section ===
 elif main_section == "Manage Job":
