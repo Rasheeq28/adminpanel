@@ -1062,6 +1062,10 @@ elif main_section == "Manage Job":
     JOB_TYPES = ["contract", "full_time", "internship", "part_time"]
 
     # --- ADD JOB ---
+    JOB_TYPES = ["contract", "full_time", "internship", "part_time"]
+    WORK_MODES = ["remote", "onsite", "hybrid"]  # WorkMode enum values
+
+    # --- ADD JOB ---
     if job_action == "Add Job":
         st.title("Add New Job")
         mode = st.radio("Choose input method:", ["Manual Entry", "Upload CSV"])
@@ -1073,7 +1077,7 @@ elif main_section == "Manage Job":
                 location = st.text_input("Location")
                 type_ = st.selectbox("Type", JOB_TYPES)
                 salary = st.text_input("Salary")
-                workMode = st.selectbox("Work Mode", ["remote", "onsite", "hybrid"])
+                workMode = st.selectbox("Work Mode", WORK_MODES)  # enum value
                 vacancy = st.number_input("Vacancy", step=1, min_value=1)
 
                 recruiterMail = st.text_input("Recruiter Email")
@@ -1094,7 +1098,7 @@ elif main_section == "Manage Job":
                     "location": location,
                     "type": type_,
                     "salary": salary,
-                    "workMode": workMode,
+                    "workMode": workMode,  # ensure enum value matches Supabase enum exactly
                     "vacancy": vacancy,
                     "recruiterMail": recruiterMail,
                     "recruitingUrl": recruitingUrl,
@@ -1104,98 +1108,99 @@ elif main_section == "Manage Job":
                     "requirements": requirements,
                     "skills": skills
                 }
+
                 try:
                     supabase.table("Job").insert(job_data).execute()
-                    st.success("Job added successfully!")
+                    st.success("✅ Job added successfully!")
                 except Exception as e:
-                    st.error(f"Error inserting job: {e}")
+                    st.error(f"❌ Error inserting job: {e}")
 
-    # --- UPDATE JOB ---
-    elif job_action == "Update Job":
-        st.title("Update Job")
-
-        try:
-            jobs = supabase.table("Job").select("*").execute().data
-        except Exception as e:
-            st.error(f"Failed to fetch jobs: {e}")
-            jobs = []
-
-        if jobs:
-            job_map = {f"{j['position']} at {j['company']} ({j['id']})": j for j in jobs}
-            selected = st.selectbox("Select Job to Update", list(job_map))
-            job = job_map[selected]
-
-            with st.form("update_job_form"):
-                company = st.text_input("Company", value=job["company"])
-                position = st.text_input("Position", value=job["position"])
-                location = st.text_input("Location", value=job["location"])
-                type_index = JOB_TYPES.index(job["type"]) if job["type"] in JOB_TYPES else 0
-                type_ = st.selectbox("Type", JOB_TYPES, index=type_index)
-                salary = st.text_input("Salary", value=job["salary"])
-                workMode = st.selectbox("Work Mode", ["remote", "onsite", "hybrid"],
-                                        index=["remote", "onsite", "hybrid"].index(job["workMode"]))
-                vacancy = st.number_input("Vacancy", value=job["vacancy"], step=1)
-
-                recruiterMail = st.text_input("Recruiter Email", value=job["recruiterMail"])
-                recruitingUrl = st.text_input("Recruiting URL", value=job["recruitingUrl"])
-                companyImage = st.text_input("Company Image URL", value=job["companyImage"])
-
-                description = st.text_area("Description", value=job["description"])
-                responsibilities = st.text_area("Responsibilities", value=job["responsibilities"])
-                requirements = st.text_area("Requirements", value=job["requirements"])
-                skills = st.text_area("Skills", value=job["skills"])
-
-                submitted = st.form_submit_button("Update Job")
-
-            if submitted:
-                job_data = {
-                    "company": company,
-                    "position": position,
-                    "location": location,
-                    "type": type_,
-                    "salary": salary,
-                    "workMode": workMode,
-                    "vacancy": vacancy,
-                    "recruiterMail": recruiterMail,
-                    "recruitingUrl": recruitingUrl,
-                    "companyImage": companyImage,
-                    "description": description,
-                    "responsibilities": responsibilities,
-                    "requirements": requirements,
-                    "skills": skills
-                }
-                try:
-                    supabase.table("Job").update(job_data).eq("id", job["id"]).execute()
-                    st.success("Job updated successfully!")
-                except Exception as e:
-                    st.error(f"Error updating job: {e}")
-
-    # --- DELETE JOB ---
-    elif job_action == "Delete Job":
-        st.title("Delete Job")
-        try:
-            jobs = supabase.table("Job").select("id, company, position").execute().data
-        except Exception as e:
-            st.error(f"Failed to fetch jobs: {e}")
-            jobs = []
-
-        if jobs:
-            job_map = {f"{j['position']} at {j['company']} ({j['id']})": j for j in jobs}
-            selected_jobs = st.multiselect("Select Job(s) to Delete", list(job_map))
-
-            if selected_jobs:
-                preview_jobs = [job_map[label] for label in selected_jobs]
-                st.write("### Preview:")
-                st.dataframe(pd.DataFrame(preview_jobs))
-                confirm = st.checkbox("I confirm I want to delete the selected job(s)")
-
-                if confirm and st.button("Delete Selected Job(s)"):
-                    try:
-                        for j in preview_jobs:
-                            supabase.table("Job").delete().eq("id", j["id"]).execute()
-                        st.success(f"Deleted {len(preview_jobs)} job(s).")
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Failed to delete: {e}")
-        else:
-            st.info("No jobs found.")
+    # # --- UPDATE JOB ---
+    # elif job_action == "Update Job":
+    #     st.title("Update Job")
+    #
+    #     try:
+    #         jobs = supabase.table("Job").select("*").execute().data
+    #     except Exception as e:
+    #         st.error(f"Failed to fetch jobs: {e}")
+    #         jobs = []
+    #
+    #     if jobs:
+    #         job_map = {f"{j['position']} at {j['company']} ({j['id']})": j for j in jobs}
+    #         selected = st.selectbox("Select Job to Update", list(job_map))
+    #         job = job_map[selected]
+    #
+    #         with st.form("update_job_form"):
+    #             company = st.text_input("Company", value=job["company"])
+    #             position = st.text_input("Position", value=job["position"])
+    #             location = st.text_input("Location", value=job["location"])
+    #             type_index = JOB_TYPES.index(job["type"]) if job["type"] in JOB_TYPES else 0
+    #             type_ = st.selectbox("Type", JOB_TYPES, index=type_index)
+    #             salary = st.text_input("Salary", value=job["salary"])
+    #             workMode = st.selectbox("Work Mode", ["remote", "onsite", "hybrid"],
+    #                                     index=["remote", "onsite", "hybrid"].index(job["workMode"]))
+    #             vacancy = st.number_input("Vacancy", value=job["vacancy"], step=1)
+    #
+    #             recruiterMail = st.text_input("Recruiter Email", value=job["recruiterMail"])
+    #             recruitingUrl = st.text_input("Recruiting URL", value=job["recruitingUrl"])
+    #             companyImage = st.text_input("Company Image URL", value=job["companyImage"])
+    #
+    #             description = st.text_area("Description", value=job["description"])
+    #             responsibilities = st.text_area("Responsibilities", value=job["responsibilities"])
+    #             requirements = st.text_area("Requirements", value=job["requirements"])
+    #             skills = st.text_area("Skills", value=job["skills"])
+    #
+    #             submitted = st.form_submit_button("Update Job")
+    #
+    #         if submitted:
+    #             job_data = {
+    #                 "company": company,
+    #                 "position": position,
+    #                 "location": location,
+    #                 "type": type_,
+    #                 "salary": salary,
+    #                 "workMode": workMode,
+    #                 "vacancy": vacancy,
+    #                 "recruiterMail": recruiterMail,
+    #                 "recruitingUrl": recruitingUrl,
+    #                 "companyImage": companyImage,
+    #                 "description": description,
+    #                 "responsibilities": responsibilities,
+    #                 "requirements": requirements,
+    #                 "skills": skills
+    #             }
+    #             try:
+    #                 supabase.table("Job").update(job_data).eq("id", job["id"]).execute()
+    #                 st.success("Job updated successfully!")
+    #             except Exception as e:
+    #                 st.error(f"Error updating job: {e}")
+    #
+    # # --- DELETE JOB ---
+    # elif job_action == "Delete Job":
+    #     st.title("Delete Job")
+    #     try:
+    #         jobs = supabase.table("Job").select("id, company, position").execute().data
+    #     except Exception as e:
+    #         st.error(f"Failed to fetch jobs: {e}")
+    #         jobs = []
+    #
+    #     if jobs:
+    #         job_map = {f"{j['position']} at {j['company']} ({j['id']})": j for j in jobs}
+    #         selected_jobs = st.multiselect("Select Job(s) to Delete", list(job_map))
+    #
+    #         if selected_jobs:
+    #             preview_jobs = [job_map[label] for label in selected_jobs]
+    #             st.write("### Preview:")
+    #             st.dataframe(pd.DataFrame(preview_jobs))
+    #             confirm = st.checkbox("I confirm I want to delete the selected job(s)")
+    #
+    #             if confirm and st.button("Delete Selected Job(s)"):
+    #                 try:
+    #                     for j in preview_jobs:
+    #                         supabase.table("Job").delete().eq("id", j["id"]).execute()
+    #                     st.success(f"Deleted {len(preview_jobs)} job(s).")
+    #                     st.rerun()
+    #                 except Exception as e:
+    #                     st.error(f"Failed to delete: {e}")
+    #     else:
+    #         st.info("No jobs found.")
