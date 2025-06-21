@@ -213,6 +213,6 @@ if submitted:
         try:
             response = supabase.table("Member").insert(data).execute()
             st.success("Member added successfully!")
-            st.json(response.data)
+            # st.json(response.data)
         except Exception as e:
             st.error(f"Failed to add member: {e}")
