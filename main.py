@@ -1115,70 +1115,39 @@ elif main_section == "Manage Job":
                 except Exception as e:
                     st.error(f"❌ Error inserting job: {e}")
 
-
-
+        # --- DELETE JOB ---
         elif job_action == "Delete Job":
-
-            st.title("Delete Job")
-
+            st.title("Delete Job Postings")
             try:
-
-                jobs = supabase.table("Job").select("id, company, position, location, type, workMode").execute().data
-
+                jobs = supabase.table("Job").select("id, company, position, type, workMode").execute().data
             except Exception as e:
-
-                st.error(f"Error fetching jobs: {e}")
-
+                st.error(f"Error fetching job listings: {e}")
                 jobs = []
 
             if jobs:
-
                 job_map = {
-
-                    f"{job['company']} - {job['position']} ({job['id']})": job for job in jobs
-
+                    f"{j['company']} - {j['position']} ({j['id']})": j for j in jobs
                 }
-
-                selected_labels = st.multiselect(
-
-                    "Search and select job(s) to delete:",
-
-                    list(job_map.keys())
-
-                )
-
+                selected_labels = st.multiselect("Select job(s) to delete:", list(job_map))
                 selected_jobs = [job_map[label] for label in selected_labels]
 
                 if selected_jobs:
-
-                    st.write("### Preview Selected Job(s):")
-
+                    st.write("### Preview Selected Jobs:")
                     st.dataframe(pd.DataFrame(selected_jobs))
+                    confirm = st.checkbox("I confirm I want to delete the selected job(s)")
 
-                    confirm = st.checkbox("✅ I confirm I want to delete the selected job(s)")
-
-                    if confirm and st.button("Delete Selected Job(s)"):
-
+                    if confirm and st.button("Delete Selected Jobs"):
                         try:
-
                             for job in selected_jobs:
                                 supabase.table("Job").delete().eq("id", job["id"]).execute()
-
-                            st.success(f"🗑️ Deleted {len(selected_jobs)} job(s)!")
-
+                            st.success(f"Deleted {len(selected_jobs)} job(s)!")
                             st.rerun()
-
                         except Exception as e:
-
-                            st.error(f"❌ Failed to delete job(s): {e}")
-
+                            st.error(f"Failed to delete job(s): {e}")
                 else:
-
-                    st.info("No jobs selected.")
-
+                    st.warning("Select at least one job to delete.")
             else:
-
-                st.info("No jobs found.")
+                st.info("No job postings found.")
 
     # # --- UPDATE JOB ---
     # elif job_action == "Update Job":
