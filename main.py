@@ -531,9 +531,57 @@ if main_section == "Manage Member":
             st.info("No members found in the database.")
 
 
+
     elif sub_section == "Delete Member":
+
         st.title("Delete Member")
-        st.info("Delete functionality coming soon...")
+
+        # Fetch all members
+
+        try:
+
+            response = supabase.table("Member").select("id, name").execute()
+
+            members = response.data
+
+        except Exception as e:
+
+            st.error(f"Error fetching members: {e}")
+
+            members = []
+
+        if members:
+
+            member_dict = {f"{m['name']} ({m['id']})": m["id"] for m in members}
+
+            selected_label = st.selectbox("Select a member to delete", list(member_dict.keys()))
+
+            selected_member_id = member_dict[selected_label]
+
+            if st.button("Delete Member"):
+
+                confirm = st.checkbox("Are you sure you want to delete this member?")
+
+                if confirm:
+
+                    try:
+
+                        supabase.table("Member").delete().eq("id", selected_member_id).execute()
+
+                        st.success("Member deleted successfully!")
+
+                    except Exception as e:
+
+                        st.error(f"Failed to delete member: {e}")
+
+                else:
+
+                    st.warning("Please confirm deletion by checking the box.")
+
+        else:
+
+            st.info("No members found to delete.")
+
 
 # === Manage Job Section ===
 elif main_section == "Manage Job":
