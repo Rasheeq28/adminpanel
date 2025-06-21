@@ -1115,34 +1115,56 @@ elif main_section == "Manage Job":
                 except Exception as e:
                     st.error(f"❌ Error inserting job: {e}")
 
+
         elif mode == "Upload CSV":
+
             st.info("📌 Required columns in the CSV:\n"
+
                     "`company`, `position`, `location`, `type`, `salary`, `vacancy`, `workMode`, "
+
                     "`recruiterMail`, `recruitingUrl`, `companyImage`, `description`, "
+
                     "`responsibilities`, `requirements`, `skills`")
 
             uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
 
             if uploaded_file:
+
                 try:
+
                     df = pd.read_csv(uploaded_file)
 
+                    # Remove unwanted unnamed columns
+
+                    df = df.loc[:, ~df.columns.str.contains("^Unnamed")]
+
                     required_columns = [
+
                         "company", "position", "location", "type", "salary", "vacancy", "workMode",
+
                         "recruiterMail", "recruitingUrl", "companyImage",
+
                         "description", "responsibilities", "requirements", "skills"
+
                     ]
+
                     missing_cols = [col for col in required_columns if col not in df.columns]
 
                     if missing_cols:
+
                         st.error(f"❌ Missing required columns: {missing_cols}")
+
                     else:
-                        # Add timestamp to each row
+
                         df["Timestamp"] = datetime.utcnow().isoformat()
+
                         if st.button("Insert all jobs from CSV"):
                             supabase.table("Job").insert(df.to_dict("records")).execute()
+
                             st.success(f"✅ Inserted {len(df)} job(s) from CSV!")
+
                 except Exception as e:
+
                     st.error(f"❌ Error processing CSV: {e}")
 
     # # --- UPDATE JOB ---
