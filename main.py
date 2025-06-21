@@ -534,6 +534,7 @@ if main_section == "Manage Member":
 
 
 
+
     elif sub_section == "Delete Member":
 
         st.title("Delete Member")
@@ -542,7 +543,7 @@ if main_section == "Manage Member":
 
         try:
 
-            response = supabase.table("Member").select("id, name, designation").execute()
+            response = supabase.table("Member").select("id, name, designation, status, panel").execute()
 
             members = response.data
 
@@ -554,46 +555,52 @@ if main_section == "Manage Member":
 
         if members:
 
-            # Build label -> ID mapping
+            # Map labels to IDs and full member info
 
-            member_options = {
+            member_map = {
 
-                f"{m['name']} - {m.get('designation', '')} ({m['id']})": m["id"]
+                f"{m['name']} - {m.get('designation', '')} ({m['id']})": m
 
                 for m in members
 
             }
 
-            # Multiselect search by name
-
             selected_labels = st.multiselect(
 
-                "Search and select members to delete:",
+                "Search and select member(s) to delete:",
 
-                options=list(member_options.keys()),
+                options=list(member_map.keys()),
 
-                help="Type a name to filter and select one or more members"
+                help="Type a name to filter and select multiple members"
 
             )
 
-            selected_ids = [member_options[label] for label in selected_labels]
+            selected_members = [member_map[label] for label in selected_labels]
 
-            if selected_ids:
+            if selected_members:
 
-                if st.button("Delete Selected Members"):
+                st.write("### Preview Selected Members:")
 
-                    try:
+                st.dataframe(pd.DataFrame(selected_members))
 
-                        for mid in selected_ids:
-                            supabase.table("Member").delete().eq("id", mid).execute()
+                confirm = st.checkbox("I confirm I want to delete the selected member(s)")
 
-                        st.success(f"Deleted {len(selected_ids)} member(s) successfully!")
+                if confirm:
 
-                        st.rerun()
+                    if st.button("Delete Selected Members"):
 
-                    except Exception as e:
+                        try:
 
-                        st.error(f"Failed to delete members: {e}")
+                            for member in selected_members:
+                                supabase.table("Member").delete().eq("id", member["id"]).execute()
+
+                            st.success(f"Deleted {len(selected_members)} member(s) successfully!")
+
+                            st.rerun()
+
+                        except Exception as e:
+
+                            st.error(f"Failed to delete members: {e}")
 
             else:
 
