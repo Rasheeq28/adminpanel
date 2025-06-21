@@ -1058,10 +1058,6 @@ elif main_section == "Manage Job":
     job_action = st.sidebar.radio("Select Action", ["Add Job", "Update Job", "Delete Job"])
 
     # --- ADD JOB ---
-    # WORK_MODES = ["remote", "onsite", "hybrid"]
-    JOB_TYPES = ["contract", "full_time", "internship", "part_time"]
-
-    # --- ADD JOB ---
     JOB_TYPES = ["contract", "full_time", "internship", "part_time"]
     WORK_MODES = ["remote", "onsite", "hybrid"]  # WorkMode enum values
 
