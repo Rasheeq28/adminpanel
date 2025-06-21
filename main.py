@@ -1116,56 +1116,69 @@ elif main_section == "Manage Job":
                     st.error(f"❌ Error inserting job: {e}")
 
 
-        elif mode == "Upload CSV":
 
-            st.info("📌 Required columns in the CSV:\n"
+        elif job_action == "Delete Job":
 
-                    "`company`, `position`, `location`, `type`, `salary`, `vacancy`, `workMode`, "
+            st.title("Delete Job")
 
-                    "`recruiterMail`, `recruitingUrl`, `companyImage`, `description`, "
+            try:
 
-                    "`responsibilities`, `requirements`, `skills`")
+                jobs = supabase.table("Job").select("id, company, position, location, type, workMode").execute().data
 
-            uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
+            except Exception as e:
 
-            if uploaded_file:
+                st.error(f"Error fetching jobs: {e}")
 
-                try:
+                jobs = []
 
-                    df = pd.read_csv(uploaded_file)
+            if jobs:
 
-                    # Remove unwanted unnamed columns
+                job_map = {
 
-                    df = df.loc[:, ~df.columns.str.contains("^Unnamed")]
+                    f"{job['company']} - {job['position']} ({job['id']})": job for job in jobs
 
-                    required_columns = [
+                }
 
-                        "company", "position", "location", "type", "salary", "vacancy", "workMode",
+                selected_labels = st.multiselect(
 
-                        "recruiterMail", "recruitingUrl", "companyImage",
+                    "Search and select job(s) to delete:",
 
-                        "description", "responsibilities", "requirements", "skills"
+                    list(job_map.keys())
 
-                    ]
+                )
 
-                    missing_cols = [col for col in required_columns if col not in df.columns]
+                selected_jobs = [job_map[label] for label in selected_labels]
 
-                    if missing_cols:
+                if selected_jobs:
 
-                        st.error(f"❌ Missing required columns: {missing_cols}")
+                    st.write("### Preview Selected Job(s):")
 
-                    else:
+                    st.dataframe(pd.DataFrame(selected_jobs))
 
-                        df["Timestamp"] = datetime.utcnow().isoformat()
+                    confirm = st.checkbox("✅ I confirm I want to delete the selected job(s)")
 
-                        if st.button("Insert all jobs from CSV"):
-                            supabase.table("Job").insert(df.to_dict("records")).execute()
+                    if confirm and st.button("Delete Selected Job(s)"):
 
-                            st.success(f"✅ Inserted {len(df)} job(s) from CSV!")
+                        try:
 
-                except Exception as e:
+                            for job in selected_jobs:
+                                supabase.table("Job").delete().eq("id", job["id"]).execute()
 
-                    st.error(f"❌ Error processing CSV: {e}")
+                            st.success(f"🗑️ Deleted {len(selected_jobs)} job(s)!")
+
+                            st.rerun()
+
+                        except Exception as e:
+
+                            st.error(f"❌ Failed to delete job(s): {e}")
+
+                else:
+
+                    st.info("No jobs selected.")
+
+            else:
+
+                st.info("No jobs found.")
 
     # # --- UPDATE JOB ---
     # elif job_action == "Update Job":
