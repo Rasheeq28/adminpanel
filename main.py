@@ -386,8 +386,8 @@ if main_section == "Manage Member":
                 submitted = st.form_submit_button("Add Member")
 
             if submitted:
-                if not name or not designation:
-                    st.error("Name and Designation are required.")
+                if not name or not panel:
+                    st.error("Name and panel are required.")
                 else:
                     data = {
                         "name": name,
