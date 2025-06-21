@@ -1114,40 +1114,51 @@ elif main_section == "Manage Job":
                     st.success("✅ Job added successfully!")
                 except Exception as e:
                     st.error(f"❌ Error inserting job: {e}")
+
+
     elif job_action == "Delete Job":
         st.title("Delete Job Postings")
-        try:
-            jobs = supabase.table("Job").select("id, company, position, type, workMode").execute().data
-        except Exception as e:
-            st.error(f"Error fetching job listings: {e}")
-            jobs = []
+    try:
+        jobs = supabase.table("Job").select("id, company, position, type, workMode").execute().data
+    except Exception as e:
+        st.error(f"❌ Error fetching job listings: {e}")
+        jobs = []
 
-        if jobs:
-            job_map = {
-                f"{j['company']} - {j['position']} ({j['id']})": j for j in jobs
-            }
-            selected_labels = st.multiselect("Select job(s) to delete:", list(job_map))
-            selected_jobs = [job_map[label] for label in selected_labels]
+    if jobs:
+        df_jobs = pd.DataFrame(jobs)
+        df_jobs["search_label"] = df_jobs.apply(
+            lambda row: f"{row['company']} - {row['position']} ({row['id']})", axis=1
+        )
+        job_map = {label: row for label, row in zip(df_jobs["search_label"], jobs)}
 
-            if selected_jobs:
-                st.write("### Preview Selected Jobs:")
-                st.dataframe(pd.DataFrame(selected_jobs))
-                confirm = st.checkbox("I confirm I want to delete the selected job(s)")
+        # Searchable dropdown
+        selected_labels = st.multiselect(
+            "🔍 Search and select job(s) to delete:",
+            options=list(job_map.keys())
+        )
 
-                if confirm and st.button("Delete Selected Jobs"):
-                    try:
-                        for job in selected_jobs:
-                            supabase.table("Job").delete().eq("id", job["id"]).execute()
-                        st.success(f"Deleted {len(selected_jobs)} job(s)!")
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Failed to delete job(s): {e}")
-            else:
-                st.warning("Select at least one job to delete.")
+        selected_jobs = [job_map[label] for label in selected_labels]
+
+        if selected_jobs:
+            st.markdown("### 🔎 Preview Selected Jobs")
+            st.dataframe(pd.DataFrame(selected_jobs))
+
+            confirm = st.checkbox("✅ I confirm I want to delete the selected job(s)")
+
+            if confirm and st.button("🗑️ Delete Selected Jobs"):
+                try:
+                    for job in selected_jobs:
+                        supabase.table("Job").delete().eq("id", job["id"]).execute()
+                    st.success(f"✅ Deleted {len(selected_jobs)} job(s) successfully!")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"❌ Failed to delete job(s): {e}")
         else:
-            st.info("No job postings found.")
+            st.info("⚠️ No job selected yet.")
+    else:
+        st.info("ℹ️ No job postings found.")
 
-    # # --- UPDATE JOB ---
+# # --- UPDATE JOB ---
     # elif job_action == "Update Job":
     #     st.title("Update Job")
     #
