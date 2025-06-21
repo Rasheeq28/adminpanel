@@ -116,6 +116,57 @@
 #             st.success("Member added successfully!")
 #             st.json(response.data)
 
+#
+# import streamlit as st
+# from supabase import create_client, Client
+#
+# # Initialize Supabase client
+# SUPABASE_URL = st.secrets["supabase"]["url"]
+# SUPABASE_KEY = st.secrets["supabase"]["key"]
+# supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+#
+# st.title("Add New Member")
+#
+# with st.form("member_form"):
+#     name = st.text_input("Name")
+#     designation = st.text_input("Designation")
+#     facebookUrl = st.text_input("Facebook URL")
+#     linkedinUrl = st.text_input("LinkedIn URL")
+#     imageUrl = st.text_input("Image URL")
+#
+#     status = st.selectbox("Status", options=["current", "alumni"])
+#     panel = st.selectbox("Panel", options=[
+#         "executive_member",
+#         "sub_executive",
+#         "executive",
+#         "general_member",
+#         "advisory"
+#     ])
+#
+#     submitted = st.form_submit_button("Add Member")
+#
+# if submitted:
+#     if not name or not designation:
+#         st.error("Name and Designation are required.")
+#     else:
+#         data = {
+#             "name": name,
+#             "designation": designation,
+#             "facebookUrl": facebookUrl,
+#             "linkedinUrl": linkedinUrl,
+#             "imageUrl": imageUrl,
+#             "status": status,
+#             "panel": panel,
+#         }
+#
+#         response = supabase.table("Member").insert(data).execute()
+#
+#         if response.status_code >= 400:
+#             st.error(f"Failed to add member: {response.data}")
+#         else:
+#             st.success("Member added successfully!")
+#             st.json(response.data)
+
 
 import streamlit as st
 from supabase import create_client, Client
@@ -159,10 +210,9 @@ if submitted:
             "panel": panel,
         }
 
-        response = supabase.table("Member").insert(data).execute()
-
-        if response.status_code >= 400:
-            st.error(f"Failed to add member: {response.data}")
-        else:
+        try:
+            response = supabase.table("Member").insert(data).execute()
             st.success("Member added successfully!")
             st.json(response.data)
+        except Exception as e:
+            st.error(f"Failed to add member: {e}")
