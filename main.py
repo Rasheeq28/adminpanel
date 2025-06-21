@@ -582,7 +582,8 @@ if main_section == "Manage Member":
 
                             st.success(f"Deleted {len(selected_ids)} member(s) successfully!")
 
-                            st.experimental_rerun()
+                            st.rerun()
+
 
                         except Exception as e:
 
