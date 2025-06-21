@@ -1067,6 +1067,9 @@ elif main_section == "Manage Job":
         st.title("Add New Job")
         mode = st.radio("Choose input method:", ["Manual Entry", "Upload CSV"])
 
+        JOB_TYPES = ["contract", "full_time", "internship", "part_time"]
+        WORK_MODES = ["remote", "onsite", "hybrid"]
+
         if mode == "Manual Entry":
             with st.form("add_job_form"):
                 company = st.text_input("Company")
@@ -1074,7 +1077,7 @@ elif main_section == "Manage Job":
                 location = st.text_input("Location")
                 type_ = st.selectbox("Type", JOB_TYPES)
                 salary = st.text_input("Salary")
-                workMode = st.selectbox("Work Mode", WORK_MODES)  # enum value
+                workMode = st.selectbox("Work Mode", WORK_MODES)
                 vacancy = st.number_input("Vacancy", step=1, min_value=1)
 
                 recruiterMail = st.text_input("Recruiter Email")
@@ -1088,9 +1091,6 @@ elif main_section == "Manage Job":
 
                 submitted = st.form_submit_button("Add Job")
 
-
-
-            # Inside the submitted block
             if submitted:
                 job_data = {
                     "company": company,
@@ -1107,14 +1107,43 @@ elif main_section == "Manage Job":
                     "responsibilities": responsibilities,
                     "requirements": requirements,
                     "skills": skills,
-                    "Timestamp": datetime.utcnow().isoformat()  # ✅ add timestamp here
+                    "Timestamp": datetime.utcnow().isoformat()
                 }
-
                 try:
                     supabase.table("Job").insert(job_data).execute()
                     st.success("✅ Job added successfully!")
                 except Exception as e:
                     st.error(f"❌ Error inserting job: {e}")
+
+        elif mode == "Upload CSV":
+            st.info("📌 Required columns in the CSV:\n"
+                    "`company`, `position`, `location`, `type`, `salary`, `vacancy`, `workMode`, "
+                    "`recruiterMail`, `recruitingUrl`, `companyImage`, `description`, "
+                    "`responsibilities`, `requirements`, `skills`")
+
+            uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
+
+            if uploaded_file:
+                try:
+                    df = pd.read_csv(uploaded_file)
+
+                    required_columns = [
+                        "company", "position", "location", "type", "salary", "vacancy", "workMode",
+                        "recruiterMail", "recruitingUrl", "companyImage",
+                        "description", "responsibilities", "requirements", "skills"
+                    ]
+                    missing_cols = [col for col in required_columns if col not in df.columns]
+
+                    if missing_cols:
+                        st.error(f"❌ Missing required columns: {missing_cols}")
+                    else:
+                        # Add timestamp to each row
+                        df["Timestamp"] = datetime.utcnow().isoformat()
+                        if st.button("Insert all jobs from CSV"):
+                            supabase.table("Job").insert(df.to_dict("records")).execute()
+                            st.success(f"✅ Inserted {len(df)} job(s) from CSV!")
+                except Exception as e:
+                    st.error(f"❌ Error processing CSV: {e}")
 
     # # --- UPDATE JOB ---
     # elif job_action == "Update Job":
