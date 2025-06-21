@@ -268,6 +268,82 @@
 
 
 # csv upload
+# import streamlit as st
+# import pandas as pd
+# from supabase import create_client, Client
+#
+# # Initialize Supabase client
+# SUPABASE_URL = st.secrets["supabase"]["url"]
+# SUPABASE_KEY = st.secrets["supabase"]["key"]
+# supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+#
+# st.title("Add New Member")
+#
+# mode = st.radio("Choose input method:", ("Manual Entry", "Upload CSV"))
+#
+# if mode == "Manual Entry":
+#     with st.form("member_form"):
+#         name = st.text_input("Name")
+#         designation = st.text_input("Designation")
+#         facebookUrl = st.text_input("Facebook URL")
+#         linkedinUrl = st.text_input("LinkedIn URL")
+#         imageUrl = st.text_input("Image URL")
+#
+#         status = st.selectbox("Status", options=["current", "alumni"])
+#         panel = st.selectbox("Panel", options=[
+#             "executive_member",
+#             "sub_executive",
+#             "executive",
+#             "general_member",
+#             "advisory"
+#         ])
+#
+#         submitted = st.form_submit_button("Add Member")
+#
+#     if submitted:
+#         if not name or not designation:
+#             st.error("Name and Designation are required.")
+#         else:
+#             data = {
+#                 "name": name,
+#                 "designation": designation,
+#                 "facebookUrl": facebookUrl,
+#                 "linkedinUrl": linkedinUrl,
+#                 "imageUrl": imageUrl,
+#                 "status": status,
+#                 "panel": panel,
+#             }
+#
+#             try:
+#                 supabase.table("Member").insert(data).execute()
+#                 st.success("Member added successfully!")
+#             except Exception as e:
+#                 st.error(f"Failed to add member: {e}")
+#
+# elif mode == "Upload CSV":
+#     uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
+#     if uploaded_file is not None:
+#         try:
+#             df = pd.read_csv(uploaded_file)
+#
+#             # Optional: Validate required columns exist
+#             required_cols = ["name","designation","facebookUrl","linkedinUrl","imageUrl","status","panel"]
+#             missing_cols = [col for col in required_cols if col not in df.columns]
+#             if missing_cols:
+#                 st.error(f"Missing columns in CSV: {missing_cols}")
+#             else:
+#                 if st.button("Insert all members from CSV"):
+#                     records = df.to_dict(orient="records")
+#                     try:
+#                         supabase.table("Member").insert(records).execute()
+#                         st.success(f"Inserted {len(records)} members successfully!")
+#                     except Exception as e:
+#                         st.error(f"Failed to insert members: {e}")
+#         except Exception as e:
+#             st.error(f"Error reading CSV file: {e}")
+
+
+# nav buttons
 import streamlit as st
 import pandas as pd
 from supabase import create_client, Client
@@ -277,67 +353,88 @@ SUPABASE_URL = st.secrets["supabase"]["url"]
 SUPABASE_KEY = st.secrets["supabase"]["key"]
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-st.title("Add New Member")
+# Sidebar navigation
+st.sidebar.title("Navigation")
+main_section = st.sidebar.radio("Go to", ["Manage Member", "Manage Job"])
 
-mode = st.radio("Choose input method:", ("Manual Entry", "Upload CSV"))
+# === Manage Member Section ===
+if main_section == "Manage Member":
+    sub_section = st.sidebar.radio("Member Options", ["Add Member", "Update Member", "Delete Member"])
 
-if mode == "Manual Entry":
-    with st.form("member_form"):
-        name = st.text_input("Name")
-        designation = st.text_input("Designation")
-        facebookUrl = st.text_input("Facebook URL")
-        linkedinUrl = st.text_input("LinkedIn URL")
-        imageUrl = st.text_input("Image URL")
+    if sub_section == "Add Member":
+        st.title("Add New Member")
 
-        status = st.selectbox("Status", options=["current", "alumni"])
-        panel = st.selectbox("Panel", options=[
-            "executive_member",
-            "sub_executive",
-            "executive",
-            "general_member",
-            "advisory"
-        ])
+        mode = st.radio("Choose input method:", ("Manual Entry", "Upload CSV"))
 
-        submitted = st.form_submit_button("Add Member")
+        if mode == "Manual Entry":
+            with st.form("member_form"):
+                name = st.text_input("Name")
+                designation = st.text_input("Designation")
+                facebookUrl = st.text_input("Facebook URL")
+                linkedinUrl = st.text_input("LinkedIn URL")
+                imageUrl = st.text_input("Image URL")
 
-    if submitted:
-        if not name or not designation:
-            st.error("Name and Designation are required.")
-        else:
-            data = {
-                "name": name,
-                "designation": designation,
-                "facebookUrl": facebookUrl,
-                "linkedinUrl": linkedinUrl,
-                "imageUrl": imageUrl,
-                "status": status,
-                "panel": panel,
-            }
+                status = st.selectbox("Status", options=["current", "alumni"])
+                panel = st.selectbox("Panel", options=[
+                    "executive_member",
+                    "sub_executive",
+                    "executive",
+                    "general_member",
+                    "advisory"
+                ])
 
-            try:
-                supabase.table("Member").insert(data).execute()
-                st.success("Member added successfully!")
-            except Exception as e:
-                st.error(f"Failed to add member: {e}")
+                submitted = st.form_submit_button("Add Member")
 
-elif mode == "Upload CSV":
-    uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
-    if uploaded_file is not None:
-        try:
-            df = pd.read_csv(uploaded_file)
+            if submitted:
+                if not name or not designation:
+                    st.error("Name and Designation are required.")
+                else:
+                    data = {
+                        "name": name,
+                        "designation": designation,
+                        "facebookUrl": facebookUrl,
+                        "linkedinUrl": linkedinUrl,
+                        "imageUrl": imageUrl,
+                        "status": status,
+                        "panel": panel,
+                    }
 
-            # Optional: Validate required columns exist
-            required_cols = ["name","designation","facebookUrl","linkedinUrl","imageUrl","status","panel"]
-            missing_cols = [col for col in required_cols if col not in df.columns]
-            if missing_cols:
-                st.error(f"Missing columns in CSV: {missing_cols}")
-            else:
-                if st.button("Insert all members from CSV"):
-                    records = df.to_dict(orient="records")
                     try:
-                        supabase.table("Member").insert(records).execute()
-                        st.success(f"Inserted {len(records)} members successfully!")
+                        supabase.table("Member").insert(data).execute()
+                        st.success("Member added successfully!")
                     except Exception as e:
-                        st.error(f"Failed to insert members: {e}")
-        except Exception as e:
-            st.error(f"Error reading CSV file: {e}")
+                        st.error(f"Failed to add member: {e}")
+
+        elif mode == "Upload CSV":
+            uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
+            if uploaded_file is not None:
+                try:
+                    df = pd.read_csv(uploaded_file)
+
+                    required_cols = ["name","designation","facebookUrl","linkedinUrl","imageUrl","status","panel"]
+                    missing_cols = [col for col in required_cols if col not in df.columns]
+                    if missing_cols:
+                        st.error(f"Missing columns in CSV: {missing_cols}")
+                    else:
+                        if st.button("Insert all members from CSV"):
+                            records = df.to_dict(orient="records")
+                            try:
+                                supabase.table("Member").insert(records).execute()
+                                st.success(f"Inserted {len(records)} members successfully!")
+                            except Exception as e:
+                                st.error(f"Failed to insert members: {e}")
+                except Exception as e:
+                    st.error(f"Error reading CSV file: {e}")
+
+    elif sub_section == "Update Member":
+        st.title("Update Member")
+        st.info("Update functionality coming soon...")
+
+    elif sub_section == "Delete Member":
+        st.title("Delete Member")
+        st.info("Delete functionality coming soon...")
+
+# === Manage Job Section ===
+elif main_section == "Manage Job":
+    st.title("Manage Job")
+    st.info("Job management functionality coming soon...")
