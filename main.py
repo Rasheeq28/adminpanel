@@ -1058,6 +1058,7 @@ elif main_section == "Manage Job":
     job_action = st.sidebar.radio("Select Action", ["Add Job", "Update Job", "Delete Job"])
 
     # --- ADD JOB ---
+    # WORK_MODES = ["remote", "onsite", "hybrid"]
     JOB_TYPES = ["contract", "full_time", "internship", "part_time"]
 
     # --- ADD JOB ---
@@ -1072,7 +1073,7 @@ elif main_section == "Manage Job":
                 location = st.text_input("Location")
                 type_ = st.selectbox("Type", JOB_TYPES)
                 salary = st.text_input("Salary")
-                workMode = st.selectbox("Work Mode", ["Remote", "Onsite", "Hybrid"])
+                workMode = st.selectbox("Work Mode", ["remote", "onsite", "hybrid"])
                 vacancy = st.number_input("Vacancy", step=1, min_value=1)
 
                 recruiterMail = st.text_input("Recruiter Email")
@@ -1131,8 +1132,8 @@ elif main_section == "Manage Job":
                 type_index = JOB_TYPES.index(job["type"]) if job["type"] in JOB_TYPES else 0
                 type_ = st.selectbox("Type", JOB_TYPES, index=type_index)
                 salary = st.text_input("Salary", value=job["salary"])
-                workMode = st.selectbox("Work Mode", ["Remote", "Onsite", "Hybrid"],
-                                        index=["Remote", "Onsite", "Hybrid"].index(job["workMode"]))
+                workMode = st.selectbox("Work Mode", ["remote", "onsite", "hybrid"],
+                                        index=["remote", "onsite", "hybrid"].index(job["workMode"]))
                 vacancy = st.number_input("Vacancy", value=job["vacancy"], step=1)
 
                 recruiterMail = st.text_input("Recruiter Email", value=job["recruiterMail"])
