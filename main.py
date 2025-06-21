@@ -767,7 +767,6 @@ if main_section == "Manage Member":
             st.info("No members found.")
 
     # --- PROMOTE MEMBER ---
-    # --- PROMOTE MEMBER ---
     elif sub_section == "Promote Member":
         st.title("Promote Member")
         try:
@@ -777,21 +776,6 @@ if main_section == "Manage Member":
             members = []
 
         if members:
-            # === Promote all general_member to executive_member ===
-            if st.button("Promote ALL general_member → executive_member"):
-                general_members = [m for m in members if m["panel"] == "general_member"]
-                if not general_members:
-                    st.info("No general members to promote.")
-                else:
-                    try:
-                        for m in general_members:
-                            supabase.table("Member").update({"panel": "executive_member"}).eq("id", m["id"]).execute()
-                        st.success(f"Promoted {len(general_members)} general_member(s) to executive_member!")
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Failed to bulk promote: {e}")
-
-            st.markdown("### Individual Promotions")
             label_to_member = {
                 f"{m['name']} - {m['panel']} ({m['id']})": m for m in members
             }
@@ -846,7 +830,6 @@ if main_section == "Manage Member":
                 st.info("No members selected.")
         else:
             st.info("No members found.")
-
 
 # === Manage Job Section ===
 elif main_section == "Manage Job":
