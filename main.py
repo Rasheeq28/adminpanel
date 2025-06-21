@@ -1058,6 +1058,9 @@ elif main_section == "Manage Job":
     job_action = st.sidebar.radio("Select Action", ["Add Job", "Update Job", "Delete Job"])
 
     # --- ADD JOB ---
+    JOB_TYPES = ["contract", "full_time", "internship", "part_time"]
+
+    # --- ADD JOB ---
     if job_action == "Add Job":
         st.title("Add New Job")
         mode = st.radio("Choose input method:", ["Manual Entry", "Upload CSV"])
@@ -1067,7 +1070,7 @@ elif main_section == "Manage Job":
                 company = st.text_input("Company")
                 position = st.text_input("Position")
                 location = st.text_input("Location")
-                type_ = st.selectbox("Type", ["contract", "full_time", "internship", "part_time"])
+                type_ = st.selectbox("Type", JOB_TYPES)
                 salary = st.text_input("Salary")
                 workMode = st.selectbox("Work Mode", ["Remote", "Onsite", "Hybrid"])
                 vacancy = st.number_input("Vacancy", step=1, min_value=1)
@@ -1106,24 +1109,6 @@ elif main_section == "Manage Job":
                 except Exception as e:
                     st.error(f"Error inserting job: {e}")
 
-        elif mode == "Upload CSV":
-            uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
-            if uploaded_file:
-                try:
-                    df = pd.read_csv(uploaded_file)
-                    required_cols = [
-                        "company", "position", "location", "type", "salary", "workMode",
-                        "description", "responsibilities", "requirements", "skills",
-                        "recruitingUrl", "recruiterMail", "companyImage", "vacancy"
-                    ]
-                    if not all(col in df.columns for col in required_cols):
-                        st.error("Missing required columns in CSV.")
-                    elif st.button("Insert all jobs from CSV"):
-                        supabase.table("Job").insert(df.to_dict("records")).execute()
-                        st.success(f"Inserted {len(df)} jobs.")
-                except Exception as e:
-                    st.error(f"Error reading CSV: {e}")
-
     # --- UPDATE JOB ---
     elif job_action == "Update Job":
         st.title("Update Job")
@@ -1143,13 +1128,11 @@ elif main_section == "Manage Job":
                 company = st.text_input("Company", value=job["company"])
                 position = st.text_input("Position", value=job["position"])
                 location = st.text_input("Location", value=job["location"])
-                type_ = st.selectbox(
-                    "Type",
-                    ["contract", "full_time", "internship", "part_time"],
-                    index=["contract", "full_time", "internship", "part_time"].index(job["type"])
-                )
+                type_index = JOB_TYPES.index(job["type"]) if job["type"] in JOB_TYPES else 0
+                type_ = st.selectbox("Type", JOB_TYPES, index=type_index)
                 salary = st.text_input("Salary", value=job["salary"])
-                workMode = st.selectbox("Work Mode", ["Remote", "Onsite", "Hybrid"], index=["Remote", "Onsite", "Hybrid"].index(job["workMode"]))
+                workMode = st.selectbox("Work Mode", ["Remote", "Onsite", "Hybrid"],
+                                        index=["Remote", "Onsite", "Hybrid"].index(job["workMode"]))
                 vacancy = st.number_input("Vacancy", value=job["vacancy"], step=1)
 
                 recruiterMail = st.text_input("Recruiter Email", value=job["recruiterMail"])
@@ -1185,8 +1168,6 @@ elif main_section == "Manage Job":
                     st.success("Job updated successfully!")
                 except Exception as e:
                     st.error(f"Error updating job: {e}")
-        else:
-            st.info("No jobs available.")
 
     # --- DELETE JOB ---
     elif job_action == "Delete Job":
