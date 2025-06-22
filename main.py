@@ -1256,10 +1256,10 @@ SUPABASE_URL = st.secrets["supabase"]["url"]
 SUPABASE_KEY = st.secrets["supabase"]["key"]
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+# Session state setup
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.user = None
-
 
 # --- LOGIN FUNCTION ---
 def login():
@@ -1282,7 +1282,6 @@ def login():
         except Exception as e:
             st.error(f"❌ Error: {e}")
 
-
 # --- LOGOUT FUNCTION ---
 def logout():
     st.sidebar.markdown("---")
@@ -1290,7 +1289,6 @@ def logout():
         st.session_state.logged_in = False
         st.session_state.user = None
         st.rerun()
-
 
 # === MAIN APP ===
 if not st.session_state.logged_in:
@@ -1694,3 +1692,4 @@ elif main_section == "Manage Job":
                 st.warning("⚠️ No job selected yet.")
         else:
             st.info("ℹ️ No job postings found.")
+    st.write("✅ You are logged in! Full admin panel starts here...")
