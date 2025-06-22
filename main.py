@@ -838,6 +838,414 @@
 
 
 # job section
+# import streamlit as st
+# import pandas as pd
+# from supabase import create_client, Client
+# from datetime import datetime
+#
+# # Initialize Supabase client
+# SUPABASE_URL = st.secrets["supabase"]["url"]
+# SUPABASE_KEY = st.secrets["supabase"]["key"]
+# supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+#
+# # Sidebar navigation
+# st.sidebar.title("Navigation")
+# main_section = st.sidebar.radio("Go to", ["Manage Member", "Manage Job"])
+#
+# # === Manage Member Section ===
+# if main_section == "Manage Member":
+#     sub_section = st.sidebar.radio("Member Options", [
+#         "Add Member", "Update Member", "Delete Member", "Promote Member"
+#     ])
+#
+#     # --- ADD MEMBER ---
+#     if sub_section == "Add Member":
+#         st.title("Add New Member")
+#         mode = st.radio("Choose input method:", ("Manual Entry", "Upload CSV"))
+#
+#         if mode == "Manual Entry":
+#             with st.form("member_form"):
+#                 name = st.text_input("Name")
+#                 designation = st.text_input("Designation")
+#                 facebookUrl = st.text_input("Facebook URL")
+#                 linkedinUrl = st.text_input("LinkedIn URL")
+#                 imageUrl = st.text_input("Image URL")
+#                 status = st.selectbox("Status", ["current", "alumni"])
+#                 panel = st.selectbox("Panel", [
+#                     "executive_member", "sub_executive", "executive",
+#                     "general_member", "advisory"
+#                 ])
+#                 submitted = st.form_submit_button("Add Member")
+#
+#             if submitted:
+#                 if not name or not panel:
+#                     st.error("Name and panel are required.")
+#                 else:
+#                     data = {
+#                         "name": name,
+#                         "designation": designation,
+#                         "facebookUrl": facebookUrl,
+#                         "linkedinUrl": linkedinUrl,
+#                         "imageUrl": imageUrl,
+#                         "status": status,
+#                         "panel": panel,
+#                     }
+#                     try:
+#                         supabase.table("Member").insert(data).execute()
+#                         st.success("Member added successfully!")
+#                     except Exception as e:
+#                         st.error(f"Failed to add member: {e}")
+#
+#         elif mode == "Upload CSV":
+#             uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
+#             if uploaded_file:
+#                 try:
+#                     df = pd.read_csv(uploaded_file)
+#                     required_cols = ["name", "designation", "facebookUrl", "linkedinUrl", "imageUrl", "status", "panel"]
+#                     if not all(col in df.columns for col in required_cols):
+#                         st.error("Missing required columns.")
+#                     elif st.button("Insert all members from CSV"):
+#                         supabase.table("Member").insert(df.to_dict("records")).execute()
+#                         st.success(f"Inserted {len(df)} members.")
+#                 except Exception as e:
+#                     st.error(f"Error reading CSV: {e}")
+#
+#     # --- UPDATE MEMBER ---
+#     elif sub_section == "Update Member":
+#         st.title("Update Member")
+#         try:
+#             members = supabase.table("Member").select("*").execute().data
+#         except Exception as e:
+#             st.error(f"Error fetching members: {e}")
+#             members = []
+#
+#         if members:
+#             member_dict = {f"{m['name']} ({m['id']})": m for m in members}
+#             selected_label = st.selectbox("Select a member to update", list(member_dict))
+#             selected_member = member_dict[selected_label]
+#
+#             with st.form("update_member_form"):
+#                 name = st.text_input("Name", selected_member["name"])
+#                 designation = st.text_input("Designation", selected_member.get("designation", ""))
+#                 facebookUrl = st.text_input("Facebook URL", selected_member.get("facebookUrl", ""))
+#                 linkedinUrl = st.text_input("LinkedIn URL", selected_member.get("linkedinUrl", ""))
+#                 imageUrl = st.text_input("Image URL", selected_member.get("imageUrl", ""))
+#                 status = st.selectbox("Status", ["current", "alumni"], index=["current", "alumni"].index(selected_member["status"]))
+#                 panel = st.selectbox("Panel", [
+#                     "executive_member", "sub_executive", "executive", "general_member", "advisory"
+#                 ], index=[
+#                     "executive_member", "sub_executive", "executive", "general_member", "advisory"
+#                 ].index(selected_member["panel"]))
+#                 submitted = st.form_submit_button("Update Member")
+#
+#             if submitted:
+#                 updated_data = {
+#                     "name": name,
+#                     "designation": designation,
+#                     "facebookUrl": facebookUrl,
+#                     "linkedinUrl": linkedinUrl,
+#                     "imageUrl": imageUrl,
+#                     "status": status,
+#                     "panel": panel,
+#                 }
+#                 try:
+#                     supabase.table("Member").update(updated_data).eq("id", selected_member["id"]).execute()
+#                     st.success("Member updated successfully!")
+#                 except Exception as e:
+#                     st.error(f"Failed to update member: {e}")
+#         else:
+#             st.info("No members found.")
+#
+#     # --- DELETE MEMBER ---
+#     elif sub_section == "Delete Member":
+#         st.title("Delete Member")
+#         try:
+#             members = supabase.table("Member").select("id, name, designation, status, panel").execute().data
+#         except Exception as e:
+#             st.error(f"Error fetching members: {e}")
+#             members = []
+#
+#         if members:
+#             member_map = {f"{m['name']} - {m.get('designation', '')} ({m['id']})": m for m in members}
+#             selected_labels = st.multiselect("Search and select member(s) to delete:", list(member_map))
+#             selected_members = [member_map[label] for label in selected_labels]
+#
+#             if selected_members:
+#                 st.write("### Preview Selected Members:")
+#                 st.dataframe(pd.DataFrame(selected_members))
+#                 confirm = st.checkbox("I confirm I want to delete the selected member(s)")
+#
+#                 if confirm and st.button("Delete Selected Members"):
+#                     try:
+#                         for member in selected_members:
+#                             supabase.table("Member").delete().eq("id", member["id"]).execute()
+#                         st.success(f"Deleted {len(selected_members)} member(s)!")
+#                         st.rerun()
+#                     except Exception as e:
+#                         st.error(f"Failed to delete: {e}")
+#             else:
+#                 st.warning("Select at least one member to delete.")
+#         else:
+#             st.info("No members found.")
+#
+#     # --- PROMOTE MEMBER ---
+#     elif sub_section == "Promote Member":
+#         st.title("Promote Member")
+#         try:
+#             members = supabase.table("Member").select("id, name, panel, designation").execute().data
+#         except Exception as e:
+#             st.error(f"Error fetching members: {e}")
+#             members = []
+#
+#         if members:
+#             label_to_member = {
+#                 f"{m['name']} - {m['panel']} ({m['id']})": m for m in members
+#             }
+#             selected_labels = st.multiselect("Select members to promote:", list(label_to_member))
+#             selected_members = [label_to_member[label] for label in selected_labels]
+#
+#             if selected_members:
+#                 updated_members = []
+#
+#                 for member in selected_members:
+#                     current_panel = member["panel"]
+#                     next_panel = None
+#                     needs_designation = False
+#
+#                     if current_panel == "general_member":
+#                         next_panel = "executive_member"
+#                     elif current_panel == "executive_member":
+#                         next_panel = "sub_executive"
+#                         needs_designation = True
+#                     elif current_panel == "sub_executive":
+#                         next_panel = "executive"
+#                         needs_designation = True
+#
+#                     if next_panel:
+#                         st.markdown(f"**{member['name']}**: `{current_panel}` ➝ `{next_panel}`")
+#                         designation = ""
+#                         if needs_designation:
+#                             designation = st.text_input(f"New Designation for {member['name']}:", key=member["id"])
+#                             if not designation.strip():
+#                                 st.warning(f"Designation required for {member['name']}")
+#                                 continue
+#                         updated_members.append({
+#                             "id": member["id"],
+#                             "panel": next_panel,
+#                             "designation": designation if needs_designation else None
+#                         })
+#                     else:
+#                         st.info(f"{member['name']} is already at the top or unpromotable.")
+#
+#                 if updated_members and st.button("Promote Selected"):
+#                     try:
+#                         for m in updated_members:
+#                             update_data = {"panel": m["panel"]}
+#                             if m["designation"] is not None:
+#                                 update_data["designation"] = m["designation"]
+#                             supabase.table("Member").update(update_data).eq("id", m["id"]).execute()
+#                         st.success(f"Promoted {len(updated_members)} member(s) successfully!")
+#                         st.rerun()
+#                     except Exception as e:
+#                         st.error(f"Failed to promote: {e}")
+#             else:
+#                 st.info("No members selected.")
+#         else:
+#             st.info("No members found.")
+#
+#
+#
+# elif main_section == "Manage Job":
+#     st.sidebar.subheader("Job Options")
+#     job_action = st.sidebar.radio("Select Action", ["Add Job", "Update Job", "Delete Job"])
+#
+#     JOB_TYPES = ["contract", "full_time", "internship", "part_time"]
+#     WORK_MODES = ["remote", "onsite", "hybrid"]
+#
+#     # --- ADD JOB ---
+#     if job_action == "Add Job":
+#         st.title("Add New Job")
+#         mode = st.radio("Choose input method:", ["Manual Entry", "Upload CSV"])
+#
+#         if mode == "Manual Entry":
+#             with st.form("add_job_form"):
+#                 company = st.text_input("Company")
+#                 position = st.text_input("Position")
+#                 location = st.text_input("Location")
+#                 type_ = st.selectbox("Type", JOB_TYPES)
+#                 salary = st.text_input("Salary")
+#                 workMode = st.selectbox("Work Mode", WORK_MODES)
+#                 vacancy = st.number_input("Vacancy", step=1, min_value=1)
+#
+#                 recruiterMail = st.text_input("Recruiter Email")
+#                 recruitingUrl = st.text_input("Recruiting URL")
+#                 companyImage = st.text_input("Company Image URL")
+#
+#                 description = st.text_area("Description")
+#                 responsibilities = st.text_area("Responsibilities")
+#                 requirements = st.text_area("Requirements")
+#                 skills = st.text_area("Skills")
+#
+#                 submitted = st.form_submit_button("Add Job")
+#
+#             if submitted:
+#                 job_data = {
+#                     "company": company,
+#                     "position": position,
+#                     "location": location,
+#                     "type": type_,
+#                     "salary": salary,
+#                     "workMode": workMode,
+#                     "vacancy": vacancy,
+#                     "recruiterMail": recruiterMail,
+#                     "recruitingUrl": recruitingUrl,
+#                     "companyImage": companyImage,
+#                     "description": description,
+#                     "responsibilities": responsibilities,
+#                     "requirements": requirements,
+#                     "skills": skills,
+#                     "Timestamp": datetime.utcnow().isoformat()
+#                 }
+#                 try:
+#                     supabase.table("Job").insert(job_data).execute()
+#                     st.success("✅ Job added successfully!")
+#                 except Exception as e:
+#                     st.error(f"❌ Error inserting job: {e}")
+#
+#         elif mode == "Upload CSV":
+#             st.subheader("Upload CSV File")
+#             uploaded_file = st.file_uploader("Upload CSV", type=["csv"])
+#
+#             if uploaded_file:
+#                 try:
+#                     df = pd.read_csv(uploaded_file)
+#                     df.drop(columns=[col for col in df.columns if "Unnamed" in col], inplace=True)
+#                     df["Timestamp"] = datetime.utcnow().isoformat()
+#
+#                     if st.button("📤 Insert All Jobs from CSV"):
+#                         supabase.table("Job").insert(df.to_dict("records")).execute()
+#                         st.success(f"✅ Inserted {len(df)} jobs from CSV.")
+#                 except Exception as e:
+#                     st.error(f"❌ Error processing CSV: {e}")
+#
+#     # --- UPDATE JOB ---
+#     elif job_action == "Update Job":
+#         st.title("Update Job")
+#
+#         try:
+#             jobs = supabase.table("Job").select("*").execute().data
+#         except Exception as e:
+#             st.error(f"❌ Error fetching job listings: {e}")
+#             jobs = []
+#
+#         if jobs:
+#             df_jobs = pd.DataFrame(jobs)
+#             df_jobs["label"] = df_jobs.apply(
+#                 lambda row: f"{row['company']} - {row['position']} ({row['id']})", axis=1
+#             )
+#             job_map = {row["label"]: row for _, row in df_jobs.iterrows()}
+#
+#             selected_label = st.selectbox("🔍 Search and select a job to update:", list(job_map))
+#             selected_job = job_map[selected_label]
+#
+#             with st.form("update_job_form"):
+#                 company = st.text_input("Company", selected_job["company"])
+#                 position = st.text_input("Position", selected_job["position"])
+#                 location = st.text_input("Location", selected_job.get("location", ""))
+#                 type_ = st.selectbox("Type", JOB_TYPES, index=JOB_TYPES.index(selected_job["type"]))
+#                 salary = st.text_input("Salary", selected_job.get("salary", ""))
+#                 workMode = st.selectbox("Work Mode", WORK_MODES, index=WORK_MODES.index(selected_job["workMode"]))
+#
+#                 # ✅ Safe handling for vacancy value
+#                 vacancy_raw = selected_job.get("vacancy", 1)
+#                 try:
+#                     vacancy_value = int(vacancy_raw)
+#                     if vacancy_value < 1:
+#                         vacancy_value = 1
+#                 except (TypeError, ValueError):
+#                     vacancy_value = 1
+#                 vacancy = st.number_input("Vacancy", value=vacancy_value, step=1, min_value=1)
+#
+#                 recruiterMail = st.text_input("Recruiter Email", selected_job.get("recruiterMail", ""))
+#                 recruitingUrl = st.text_input("Recruiting URL", selected_job.get("recruitingUrl", ""))
+#                 companyImage = st.text_input("Company Image URL", selected_job.get("companyImage", ""))
+#
+#                 description = st.text_area("Description", selected_job.get("description", ""))
+#                 responsibilities = st.text_area("Responsibilities", selected_job.get("responsibilities", ""))
+#                 requirements = st.text_area("Requirements", selected_job.get("requirements", ""))
+#                 skills = st.text_area("Skills", selected_job.get("skills", ""))
+#
+#                 submitted = st.form_submit_button("Update Job")
+#
+#             if submitted:
+#                 updated_data = {
+#                     "company": company,
+#                     "position": position,
+#                     "location": location,
+#                     "type": type_,
+#                     "salary": salary,
+#                     "workMode": workMode,
+#                     "vacancy": vacancy,
+#                     "recruiterMail": recruiterMail,
+#                     "recruitingUrl": recruitingUrl,
+#                     "companyImage": companyImage,
+#                     "description": description,
+#                     "responsibilities": responsibilities,
+#                     "requirements": requirements,
+#                     "skills": skills,
+#                     "Timestamp": datetime.utcnow().isoformat()
+#                 }
+#
+#                 try:
+#                     supabase.table("Job").update(updated_data).eq("id", selected_job["id"]).execute()
+#                     st.success("✅ Job updated successfully!")
+#                     st.rerun()
+#                 except Exception as e:
+#                     st.error(f"❌ Failed to update job: {e}")
+#         else:
+#             st.info("ℹ️ No jobs found to update.")
+#
+#
+#     # --- DELETE JOB ---
+#     elif job_action == "Delete Job":
+#         st.title("Delete Job Postings")
+#         try:
+#             jobs = supabase.table("Job").select("id, company, position, type, workMode").execute().data
+#         except Exception as e:
+#             st.error(f"❌ Error fetching job listings: {e}")
+#             jobs = []
+#
+#         if jobs:
+#             df_jobs = pd.DataFrame(jobs)
+#             df_jobs["search_label"] = df_jobs.apply(
+#                 lambda row: f"{row['company']} - {row['position']} ({row['id']})", axis=1
+#             )
+#             job_map = {label: row for label, row in zip(df_jobs["search_label"], jobs)}
+#
+#             selected_labels = st.multiselect("🔍 Search and select job(s) to delete:", list(job_map.keys()))
+#             selected_jobs = [job_map[label] for label in selected_labels]
+#
+#             if selected_jobs:
+#                 st.markdown("### 🔎 Preview Selected Jobs")
+#                 st.dataframe(pd.DataFrame(selected_jobs))
+#
+#                 confirm = st.checkbox("✅ I confirm I want to delete the selected job(s)")
+#
+#                 if confirm and st.button("🗑️ Delete Selected Jobs"):
+#                     try:
+#                         for job in selected_jobs:
+#                             supabase.table("Job").delete().eq("id", job["id"]).execute()
+#                         st.success(f"✅ Deleted {len(selected_jobs)} job(s) successfully!")
+#                         st.rerun()
+#                     except Exception as e:
+#                         st.error(f"❌ Failed to delete job(s): {e}")
+#             else:
+#                 st.warning("⚠️ No job selected yet.")
+#         else:
+#             st.info("ℹ️ No job postings found.")
+
+
+
 import streamlit as st
 import pandas as pd
 from supabase import create_client, Client
@@ -847,6 +1255,49 @@ from datetime import datetime
 SUPABASE_URL = st.secrets["supabase"]["url"]
 SUPABASE_KEY = st.secrets["supabase"]["key"]
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+    st.session_state.user = None
+
+
+# --- LOGIN FUNCTION ---
+def login():
+    st.title("🔐 Admin Login")
+    with st.form("login_form"):
+        email = st.text_input("Email")
+        password = st.text_input("Password", type="password")
+        login_btn = st.form_submit_button("Login")
+
+    if login_btn:
+        try:
+            result = supabase.auth.sign_in_with_password({"email": email, "password": password})
+            if result.user:
+                st.session_state.logged_in = True
+                st.session_state.user = result.user
+                st.success("✅ Logged in successfully!")
+                st.rerun()
+            else:
+                st.error("❌ Login failed. Please check credentials.")
+        except Exception as e:
+            st.error(f"❌ Error: {e}")
+
+
+# --- LOGOUT FUNCTION ---
+def logout():
+    st.sidebar.markdown("---")
+    if st.sidebar.button("🚪 Logout"):
+        st.session_state.logged_in = False
+        st.session_state.user = None
+        st.rerun()
+
+
+# === MAIN APP ===
+if not st.session_state.logged_in:
+    login()
+    st.stop()
+else:
+    logout()
 
 # Sidebar navigation
 st.sidebar.title("Navigation")
@@ -1053,111 +1504,6 @@ if main_section == "Manage Member":
         else:
             st.info("No members found.")
 
-# === Manage Job Section ===
-# elif main_section == "Manage Job":
-#     st.sidebar.subheader("Job Options")
-#     job_action = st.sidebar.radio("Select Action", ["Add Job", "Update Job", "Delete Job"])
-#
-#     # --- ADD JOB ---
-#     JOB_TYPES = ["contract", "full_time", "internship", "part_time"]
-#     WORK_MODES = ["remote", "onsite", "hybrid"]  # WorkMode enum values
-#
-#     # --- ADD JOB ---
-#     if job_action == "Add Job":
-#         st.title("Add New Job")
-#         mode = st.radio("Choose input method:", ["Manual Entry", "Upload CSV"])
-#
-#         JOB_TYPES = ["contract", "full_time", "internship", "part_time"]
-#         WORK_MODES = ["remote", "onsite", "hybrid"]
-#
-#         if mode == "Manual Entry":
-#             with st.form("add_job_form"):
-#                 company = st.text_input("Company")
-#                 position = st.text_input("Position")
-#                 location = st.text_input("Location")
-#                 type_ = st.selectbox("Type", JOB_TYPES)
-#                 salary = st.text_input("Salary")
-#                 workMode = st.selectbox("Work Mode", WORK_MODES)
-#                 vacancy = st.number_input("Vacancy", step=1, min_value=1)
-#
-#                 recruiterMail = st.text_input("Recruiter Email")
-#                 recruitingUrl = st.text_input("Recruiting URL")
-#                 companyImage = st.text_input("Company Image URL")
-#
-#                 description = st.text_area("Description")
-#                 responsibilities = st.text_area("Responsibilities")
-#                 requirements = st.text_area("Requirements")
-#                 skills = st.text_area("Skills")
-#
-#                 submitted = st.form_submit_button("Add Job")
-#
-#             if submitted:
-#                 job_data = {
-#                     "company": company,
-#                     "position": position,
-#                     "location": location,
-#                     "type": type_,
-#                     "salary": salary,
-#                     "workMode": workMode,
-#                     "vacancy": vacancy,
-#                     "recruiterMail": recruiterMail,
-#                     "recruitingUrl": recruitingUrl,
-#                     "companyImage": companyImage,
-#                     "description": description,
-#                     "responsibilities": responsibilities,
-#                     "requirements": requirements,
-#                     "skills": skills,
-#                     "Timestamp": datetime.utcnow().isoformat()
-#                 }
-#                 try:
-#                     supabase.table("Job").insert(job_data).execute()
-#                     st.success("✅ Job added successfully!")
-#                 except Exception as e:
-#                     st.error(f"❌ Error inserting job: {e}")
-#
-#
-#
-#     elif job_action == "Delete Job":
-#         st.title("Delete Job Postings")
-#     try:
-#         jobs = supabase.table("Job").select("id, company, position, type, workMode").execute().data
-#     except Exception as e:
-#         st.error(f"❌ Error fetching job listings: {e}")
-#         jobs = []
-#
-#     if jobs:
-#         df_jobs = pd.DataFrame(jobs)
-#         df_jobs["search_label"] = df_jobs.apply(
-#             lambda row: f"{row['company']} - {row['position']} ({row['id']})", axis=1
-#         )
-#         job_map = {label: row for label, row in zip(df_jobs["search_label"], jobs)}
-#
-#         # Searchable dropdown
-#         selected_labels = st.multiselect(
-#             "🔍 Search and select job(s) to delete:",
-#             options=list(job_map.keys())
-#         )
-#
-#         selected_jobs = [job_map[label] for label in selected_labels]
-#
-#         if selected_jobs:
-#             st.markdown("### 🔎 Preview Selected Jobs")
-#             st.dataframe(pd.DataFrame(selected_jobs))
-#
-#             confirm = st.checkbox("✅ I confirm I want to delete the selected job(s)")
-#
-#             if confirm and st.button("🗑️ Delete Selected Jobs"):
-#                 try:
-#                     for job in selected_jobs:
-#                         supabase.table("Job").delete().eq("id", job["id"]).execute()
-#                     st.success(f"✅ Deleted {len(selected_jobs)} job(s) successfully!")
-#                     st.rerun()
-#                 except Exception as e:
-#                     st.error(f"❌ Failed to delete job(s): {e}")
-#         else:
-#             st.info("⚠️ No job selected yet.")
-#     else:
-#         st.info("ℹ️ No job postings found.")
 
 
 elif main_section == "Manage Job":
